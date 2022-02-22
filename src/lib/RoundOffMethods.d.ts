@@ -1,6 +1,6 @@
 export enum RoundOffMethods {
-  Truncate,
-  RoundToNearest,
-  RoundUp,
-  RoundDown,
+  Truncate = "Truncate",
+  RoundToNearest = "Round To Nearest",
+  RoundUp = "Round Up",
+  RoundDown = "Round Down",
 }
