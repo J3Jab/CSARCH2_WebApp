@@ -7,5 +7,8 @@ export default defineConfig({
   plugins: [
     svelte(),
     WindiCss(),
-  ]
+  ],
+  resolve: {
+    extensions: ['.d.ts'],
+  }
 })

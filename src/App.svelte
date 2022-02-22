@@ -1,8 +1,7 @@
 <script lang="ts">
   import "virtual:windi.css";
   import "./assets/base.css";
-  // @ts-ignore
-  import { RoundOffMethods } from "./lib/RoundOffMethods.d.ts";
+  import { RoundOffMethods } from "./lib/RoundOffMethods";
 
   const methods: string[] = [];
 
