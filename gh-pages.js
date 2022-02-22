@@ -1,7 +1,7 @@
 import { publish } from 'gh-pages';
 
 publish(
-  'public',
+  'dist',
   {
     branch: 'gh-pages',
     repo: 'https://github.com/J3Jab/CSARCH2_WebApp.git',
