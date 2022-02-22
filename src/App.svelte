@@ -1,23 +1,39 @@
 <script lang="ts">
-  import logo from './assets/svelte.png'
-  import Counter from './lib/Counter.svelte'
-  import 'virtual:windi.css'
-  import './assets/base.css'
+  import "virtual:windi.css";
+  import "./assets/base.css";
+  // @ts-ignore
+  import { RoundOffMethods } from "./lib/RoundOffMethods.d.ts";
+
+  const methods: string[] = [];
+
+  for (const method in RoundOffMethods) {
+    if (isNaN(Number(method))) methods.push(method);
+  }
+
+  let decimal = 0;
+  let exponent = 0;
+  let roundOff = "";
+
+  function handleSubmit() {
+    console.log("Hello World");
+  }
 </script>
 
 <main>
-  <img src={logo} alt="Svelte Logo" />
-  <h1>Hello Typescript!</h1>
-
-  <Counter />
-
-  <p>
-    Visit <a href="https://svelte.dev">svelte.dev</a> to learn how to build Svelte
-    apps.
+  <p class="text-2xl">
+    Decimal-32 Floating Point to Binary and Hexadecimal Converter
   </p>
 
-  <p>
-    Check out <a href="https://github.com/sveltejs/kit#readme">SvelteKit</a> for
-    the officially supported framework, also powered by Vite!
-  </p>
+  <form on:submit|preventDefault={handleSubmit}>
+    <label for="decimal">Decimal</label>
+    <input id="decimal" type="number" bind:value={decimal} />
+    <label for="exponent">Exponent</label>
+    <input id="exponent" type="number" bind:value={exponent} />
+    <input type="submit" value="" />
+
+    {#each methods as method (method)}
+      <input type="radio" bind:group={roundOff} id={method} value={method} />
+      <label for={method}>{method}</label>
+    {/each}
+  </form>
 </main>
