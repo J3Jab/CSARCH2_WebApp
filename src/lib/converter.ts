@@ -1,77 +1,68 @@
+import type { RoundOffMethods } from "./RoundOffMethods";
 
-import { RoundOffMethods } from "./RoundOffMethods";
-
-let decimal = 0;
-let exponent = 0;
-
-let mostSigBit = 0;
-let ePrimeBinary = "0";
-let significantBitBinary = "0";
-
-let signBit = "0";
-let combiField = "0";
-let expContinuation = "0";
-let first3digitsDPBCD = "0";
-let last3digitsDPBCD = "0";
-
-let roundOffMethod = RoundOffMethods.Truncate;
-
-function normalize() {
-  if (decimal < 1000000.0 && decimal > -1000000.0)
-    while (decimal < 1000000.0 && decimal > -1000000.0) {
+function normalize(decimal: number, exponent: number) {
+  if (decimal == 0) {
+    return {
+      decimal,
+      exponent,
+    }
+  } else if (decimal < 1000000 && decimal > -1000000) {
+    while (decimal < 1000000 && decimal > -1000000) {
       decimal *= 10;
       exponent -= 1;
     }
-  else
+  } else {
     while (decimal > 9999999 || decimal < -9999999) {
       decimal /= 10;
       exponent += 1;
     }
-}
+  }
 
-function roundEven() {
-  return Math.round(decimal / 2) * 2;
-}
-
-function roundOff() {
-  switch (roundOffMethod) {
-    case RoundOffMethods.Truncate:
-      decimal = Math.trunc(decimal);
-      break;
-    case RoundOffMethods.RoundDown:
-      decimal = Math.floor(decimal);
-      break;
-    case RoundOffMethods.RoundUp:
-      decimal = Math.ceil(decimal);
-      break;
-    case RoundOffMethods.RoundToNearest:
-      decimal = roundEven();
-      break;
+  return {
+    decimal,
+    exponent,
   }
 }
 
-function msbToBinary() {
-  mostSigBit = Math.abs(decimal);
+function roundOff(round: RoundOffMethods, decimal: number) {
+  switch (round.toString()) {
+    case "Truncate":
+      console.log('trunc', Math.trunc(decimal));
+      return Math.trunc(decimal);
 
-  while (mostSigBit > 9) mostSigBit /= 10;
+    case "RoundDown":
+      console.log('down', Math.floor(decimal));
+      return Math.floor(decimal);
 
-  significantBitBinary = mostSigBit.toString(2);
+    case "RoundUp":
+      console.log('up', Math.ceil(decimal));
+      return Math.ceil(decimal);
+
+    case "RoundToNearest":
+      console.log('nearest', Math.round(decimal / 2) * 2)
+      return Math.round(decimal / 2) * 2;
+  }
+
+  return decimal
 }
 
-function computeEPrime() {
-  let ePrime = exponent + 101;
-  ePrimeBinary = ePrime.toString(2);
-
-  while (ePrimeBinary.length < 8) ePrimeBinary = "0" + ePrimeBinary;
+function getMSB(num: number) {
+  num = Math.abs(num);
+  while (num > 9) num /= 10;
+  return Math.trunc(num).toString(2).padStart(4, "0");
 }
 
-function determineCombiField() {
-  if (mostSigBit >= 0 && mostSigBit <= 7)
-    combiField =
-      ePrimeBinary.substring(0, 2) + significantBitBinary.substring(1, 4);
+function getEPrime(exp: number) {
+  const ePrime = exp + 101;
+  return ePrime.toString(2).padStart(8, "0");
+}
+
+function getCombiField(msb: string, ePrime: string) {
+  const num = parseInt(msb, 2)
+  if (num >= 0 && num <= 7)
+    return ePrime.substring(0, 2) + msb.substring(1, 4);
   else
-    combiField =
-      "11" + ePrimeBinary.substring(0, 2) + significantBitBinary.charAt(3);
+    return "11" + ePrime.substring(0, 2) + msb.charAt(3);
 }
 
 function PatternTable(msb: string) {
@@ -97,7 +88,7 @@ function PatternTable(msb: string) {
   return "";
 }
 
-function keyDPBCD(digitBCD: String[][], key: String) {
+function keyDPBCD(digitBCD: string[], key: string) {
   switch (key) {
     case "a":
       return digitBCD[0][0];
@@ -134,46 +125,39 @@ function keyDPBCD(digitBCD: String[][], key: String) {
 }
 
 function computeDPBCD(value: string) {
-  let digitBCD: string[][] = [];
-  let temp = "";
-  for (let i = 0; i < 3; i++) {
-    temp = parseInt(value.charAt(i)).toString(2);
+  let digitBCD: string[] = [];
+  let temp;
 
-    for (let j = 0; j < 4; j++) {
-      digitBCD[i][j] = temp.charAt(j);
-    }
+  for (let i = 0; i < 3; i++) {
+    temp = parseInt(value.charAt(i)).toString(2).padStart(4, "0");
+    digitBCD.push(temp);
   }
 
-  let msb = digitBCD[0][0] + digitBCD[1][0] + digitBCD[2][0];
-  let pattern = PatternTable(msb);
+  const msb = digitBCD[0][0] + digitBCD[1][0] + digitBCD[2][0];
+  const pattern = PatternTable(msb);
 
   let ans = "";
 
   for (let i = 0; i < pattern.length; i++) {
-    ans = ans + keyDPBCD(digitBCD, pattern.charAt(i));
+    ans += keyDPBCD(digitBCD, pattern.charAt(i));
   }
 
   return ans;
 }
 
-function determineDPBCD() {
-  let value = Math.abs(decimal).toString();
+function getDPBCD(decimal: number) {
+  const value = Math.abs(decimal).toString().padStart(7, "0");
+  const first3digits = value.substring(1, 4);
+  const last3digits = value.substring(4, 7);
 
-  let last3digits = value.substring(4, 7);
-  let first3digits = value.substring(1, 4);
-
-  first3digitsDPBCD = computeDPBCD(first3digits);
-  last3digitsDPBCD = computeDPBCD(last3digits);
+  return {
+    first3Digits: computeDPBCD(first3digits),
+    last3Digits: computeDPBCD(last3digits),
+  }
 }
 
-function binaryToHexadecimal() {
-  let fullBin =
-    signBit +
-    combiField +
-    expContinuation +
-    first3digitsDPBCD +
-    last3digitsDPBCD;
-  let hexa = "0x";
+function binaryToHexadecimal(fullBin: string) {
+  let hexa = "";
   let cutoff = 0;
   let substring_bin = "";
 
@@ -183,59 +167,42 @@ function binaryToHexadecimal() {
     hexa = hexa + parseInt(substring_bin, 2).toString(16);
   }
 
-  return hexa;
+  return "0x" + hexa.toUpperCase();
 }
-function convert(value: string, exp: number, round: RoundOffMethods) {
-  decimal = Number(value);
-  exponent = exp;
-  roundOffMethod = round;
 
-  normalize();
-  roundOff();
-  normalize();
+export function convert(value: string, exponent: number, round: RoundOffMethods) {
+  let decimal = Number(value);
 
-  if (decimal > 0) signBit = "0";
-  else signBit = "1";
+  ({ decimal, exponent } = normalize(decimal, exponent));
+  decimal = roundOff(round, decimal);
+  ({ decimal, exponent } = normalize(decimal, exponent));
 
-  if (exponent > 90 || exponent < -101) {
+  const signBit = decimal >= 0 ? 0 : 1;
+  let combiField, expContinuation, first3Digits = "0000000000", last3Digits;
+  last3Digits = first3Digits;
+
+  if (decimal === 0) {
+    const ePrime = getEPrime(exponent)
+    combiField = getCombiField('0000', ePrime)
+    expContinuation = ePrime.substring(2);
+  } else if (exponent > 90 || exponent < -101) {
     combiField = "11110";
     expContinuation = "000000";
-    first3digitsDPBCD = "0000000000";
-    last3digitsDPBCD = "0000000000";
   } else if (isNaN(decimal)) {
     combiField = "11111";
     expContinuation = "000000";
-    first3digitsDPBCD = "0000000000";
-    last3digitsDPBCD = "0000000000";
   } else {
-    msbToBinary();
-    computeEPrime();
-    determineCombiField();
-    expContinuation = ePrimeBinary.substring(2);
-    determineDPBCD();
-
-    binaryToHexadecimal();
+    const msb = getMSB(decimal)
+    const ePrime = getEPrime(exponent)
+    combiField = getCombiField(msb, ePrime)
+    expContinuation = ePrime.substring(2);
+    ({ first3Digits, last3Digits } = getDPBCD(decimal))
   }
 
-  return (
-    signBit +
-    combiField +
-    expContinuation +
-    first3digitsDPBCD +
-    last3digitsDPBCD
-  );
-}
+  const fullBin = signBit + combiField + expContinuation + first3Digits + last3Digits;
 
-export function decimalTo32Float(decimal: string, exponent: string, roundOff: RoundOffMethods) {
-  return convert(decimal, parseInt(exponent), roundOff);
-}
-
-export function decimalTo32FloatHexadecimal(
-  decimal: string,
-  exponent: string,
-  roundOff: RoundOffMethods
-) {
-  convert(decimal, parseInt(exponent), roundOff);
-
-  return binaryToHexadecimal();
+  return {
+    bin: fullBin.match(/.{1,4}/g)!.join(' '),
+    hex: binaryToHexadecimal(fullBin)
+  }
 }
