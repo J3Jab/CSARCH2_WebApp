@@ -1,6 +1,9 @@
 <script lang="ts">
     import { RoundOffMethods } from './RoundOffMethods'
 
+    let decimal = 0
+    let exponent = 0
+
     let mostSigBit = 0
     let ePrimeBinary = "0"
     let significantBitBinary = "0"
@@ -13,7 +16,7 @@
 
     export let roundOffMethod: RoundOffMethods
 
-    function normalize(decimal: number, exponent: number){
+    function normalize(){
         if(decimal < 1000000.0 && decimal > -1000000.0)
             while(decimal < 1000000.0 && decimal > -1000000.0){
                 decimal *= 10
@@ -25,12 +28,12 @@
                 exponent += 1
             }
     }
-    
-    function roundEven(decimal: number){
+
+    function roundEven(){
         return Math.round(decimal/2)*2
     }
 
-    function roundOff(decimal: number, exponent: number){
+    function roundOff(){
         switch(roundOffMethod){
             case RoundOffMethods.Truncate:
                 decimal = Math.trunc(decimal)
@@ -42,12 +45,12 @@
                 decimal = Math.ceil(decimal)
                 break;
             case RoundOffMethods.RoundToNearest:
-                decimal = roundEven(decimal)
+                decimal = roundEven()
                 break;
         }
     }
 
-    function msbToBinary(decimal: number){
+    function msbToBinary(){
         mostSigBit = Math.abs(decimal)
 
         while(mostSigBit > 9)
@@ -57,7 +60,7 @@
 
     }
 
-    function computeEPrime(exponent: number){
+    function computeEPrime(){
         let ePrime = exponent + 101
         ePrimeBinary = ePrime.toString(2)
 
@@ -156,7 +159,7 @@
         
     }
 
-    function determineDPBCD(decimal: number){
+    function determineDPBCD(){
         let value = Math.abs(decimal).toString()
 
         let last3digits = value.substring(4, 7)
@@ -182,12 +185,13 @@
         return hexa
         
     }
-    function convert(value: string, exponent: number){
-        let decimal = Number(value)
+    function convert(value: string, exp: number){
+        decimal = Number(value)
+        exponent = exp
 
-        normalize(decimal, exponent)
-        roundOff(decimal, exponent)
-        normalize(decimal, exponent)
+        normalize()
+        roundOff()
+        normalize()
 
         if(decimal > 0)
             signBit = "0"
@@ -207,11 +211,11 @@
             last3digitsDPBCD = "0000000000"
         }
         else{
-            msbToBinary(decimal)
-            computeEPrime(exponent)
+            msbToBinary()
+            computeEPrime()
             determineCombiField()
             expContinuation = ePrimeBinary.substring(2)
-            determineDPBCD(decimal)
+            determineDPBCD()
 
             binaryToHexadecimal()
 
