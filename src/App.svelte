@@ -2,6 +2,7 @@
   import "virtual:windi.css";
   import "./assets/base.css";
   import { RoundOffMethods } from "./lib/RoundOffMethods";
+  import { decimalTo32Float, decimalTo32FloatHexadecimal } from './lib/converter'
   import OutputDiv from './lib/OutputDiv.svelte';
 
   const methods: string[] = [];
@@ -17,6 +18,9 @@
     exponent: false,
   }
 
+  let binVal = ''
+  let hexVal = ''
+
   function handleSubmit() {
     console.log('Submitted')
     if (!decimal) {
@@ -25,6 +29,11 @@
 
     if (!exponent) {
       errors.exponent = true
+    }
+
+    if (!errors.decimal && !errors.exponent) {
+      binVal = decimalTo32Float(decimal, exponent, roundOff);
+      // hexVal = decimalTo32FloatHexadecimal(decimal, exponent, roundOff);
     }
   }
 
@@ -84,7 +93,7 @@
   </form>
 
   <div class="my-10">
-    <OutputDiv title={"Hex"} value={"AAAAAAAA"} />
-    <OutputDiv title={"Bin"} value={"1111111111111111111111111111"} />
+    <OutputDiv title={"Hex"} value={hexVal} />
+    <OutputDiv title={"Bin"} value={binVal} />
   </div>
 </main>
